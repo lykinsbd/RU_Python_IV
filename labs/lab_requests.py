@@ -57,3 +57,76 @@ def debug_mode():
     requests_log = logging.getLogger("requests.packages.urllib3")
     requests_log.setLevel(logging.DEBUG)
     requests_log.propagate = True
+
+
+def main():
+    """
+    requesting stuff
+    :return:
+    """
+
+    print("========[ TRYING THE BASIC URL ] ========\n")
+    initial_url = "http://104.239.140.227"
+    print(f"Making initial request to {initial_url}")
+    response = requests.get(initial_url)
+    r_json = response.json()
+    token = r_json["token"]
+    print(f"Token: {token}")
+    url = r_json["next"]
+    print(f"Next URL: {url}")
+
+    print("Following the trail...")
+    counter = 0
+    while True:
+        counter = counter + 1
+        next_response = requests.post(url, json={"token": token})
+        next_json = next_response.json()
+        answer = next_json.get("answer")
+        if not answer:
+            print(f"Looping on to try number {counter}")
+            url = next_json["next"]
+        else:
+            break
+
+    print(f"Final response: {next_json}")
+
+    print("\n========[ TRYING THE ADVANCED URL ] ========\n")
+
+    initial_url = "http://104.239.140.227/advanced"
+    print(f"Making initial request to {initial_url}")
+    response = requests.get(initial_url)
+    r_json = response.json()
+    token = r_json["token"]
+    print(f"Token: {token}")
+    next_url = None
+    for key in r_json.keys():
+        if key != "token":
+            next_url = key
+            continue
+    url = r_json[next_url]
+    print(f"Next URL ({next_url}): {url}")
+
+    print("Following the trail...")
+    counter = 0
+    while True:
+        counter = counter + 1
+        next_response = requests.post(url, json={"token": token})
+        next_json = next_response.json()
+        answer = next_json.get("answer")
+        if not answer:
+            print(f"Looping on to try number {counter}")
+            next_url = None
+            for key in next_json.keys():
+                if key != "token":
+                    next_url = key
+                    continue
+            url = next_json[next_url]
+            print(f"Next URL ({next_url}): {url}")
+        else:
+            break
+
+    print(f"Final response: {next_json}")
+
+
+if __name__ == '__main__':
+    main()
